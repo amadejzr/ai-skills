@@ -1,15 +1,15 @@
 ---
 name: review
-description: "Multi-reviewer code review of a change (since a base ref, a committed range, staged, or the whole working tree) using the reviewer files, models and coding standards in the repo's flow directory. Runs every reviewer or the ones named, writes the review to the flow directory, lists the findings with a recommendation, applies exactly the ones the user picks, re-reviews the fixes, runs the repo checks and closes the ticket. Use when the user wants to review a branch, a PR, work-in-progress changes, asks to \"review since X\", or when flow:implement finishes a ticket."
+description: "Multi-reviewer code review of a change (since a base ref, a committed range, staged, or the whole working tree) using the reviewer files, models and coding standards in the repo's flow directory. Runs every reviewer or the ones named, writes the review to the flow directory, then hands it to flow:fix, which lets the user pick the findings to apply, applies them, re-reviews the fixes, runs the repo checks and closes the ticket. Use when the user wants to review a branch, a PR, work-in-progress changes, asks to \"review since X\", or when flow:implement finishes a ticket."
 ---
 
 # Review
 
-Run every configured reviewer in parallel over one change, merge their findings into three tiers, write the review file, let the user pick what to apply, apply exactly that, re-review the fixes, prove the checks are green.
+Run every configured reviewer in parallel over one change, merge their findings into three tiers, write the review file, and hand it to `flow:fix` to choose, apply and prove.
 
-Call the Skill tool with "flow:config": it resolves the flow directory with its reviewer files, and `config.md` with the standards map and notes, selection mode, checks, domain docs and the tracker rules for fetching and closing tickets.
+Call the Skill tool with "flow:config": it resolves the flow directory with its reviewer files, and `config.md` with the standards map and notes, domain docs and the tracker rules for fetching tickets.
 With no flow directory or no file in `reviewers/`, stop and suggest `/flow:setup`; nothing runs on defaults.
-Nothing is read from the repo except the code under review and the repo's own docs the config points at, and nothing is written there except the fixes the user picks.
+Nothing is read from the repo except the code under review and the repo's own docs the config points at, and nothing is written there; fixes are `flow:fix`'s job.
 
 ## Process
 
@@ -61,13 +61,13 @@ Each prompt contains, in this order:
 4. The reviewer-specific inputs from step 3.
 5. The brief: "Review this change and report in the contract's output format."
 
-Reviewers only read; nothing is changed before the user has chosen.
+Reviewers only read; nothing is changed here.
 
 ### 5. Merge
 
 - Parse every finding block. Assign ids `F1`, `F2`, ... in the order must-fix, worth-doing, optional, and within a tier by confidence descending.
 - Two findings with the same root cause in the same hunk are one finding: keep the higher severity, join the reviewer names with `+`.
-- Re-grade by effect, sparingly, and visibly: when a reviewer graded a nit as must-fix or a real bug as optional, move it and show the move in the chat list as `F3 must-fix→optional: <reason>`. Never downgrade a must-fix you have not verified yourself. Otherwise keep each reviewer's tier.
+- Re-grade by effect, sparingly, and visibly: when a reviewer graded a nit as must-fix or a real bug as optional, move it and record the move under the finding's heading as `- regraded: must-fix→optional: <reason>`, for `flow:fix` to show. Never downgrade a must-fix you have not verified yourself. Otherwise keep each reviewer's tier.
 - Keep every reviewer's `Declined to judge` list.
 
 ### 6. Write the review file
@@ -112,73 +112,12 @@ Create the directory if needed.
 
 `Ready to merge` is `no` with any must-fix, `with fixes` with only worth-doing, `yes` otherwise.
 
-### 7. Let the user choose
+### 7. Hand over to fix
 
-Print the findings in chat as a compact list, one line each, grouped by tier, with any re-grade shown:
+Call the Skill tool with "flow:fix", passing the review file path.
+It lists the findings with the recommendation, applies exactly the ones the user picks, re-reviews the fixes, runs the checks and closes the ticket.
 
-```
-Must fix
-  F1  Stored XSS in the HTML page          src/server.js:15      correctness
-  F2  Reused ids after delete              src/todo-store.js:15  correctness+security
-Worth doing
-  F7  No tests for error paths             test/todo-store.test.js  correctness
-```
-
-Then end your turn with the review file path and one question, worded so "yes" accepts the recommendation.
-With must-fix findings: "Recommended: apply all must-fix (F1 to F6). Reply **yes**, `+F7` to add, `-F2` to drop, a list of ids, `all`, or `none`."
-With none: "No must-fix findings. Recommended: `none`. Reply **yes**, a list of ids, or `all`."
-
-**Reply grammar**: `yes` is the recommended set; `all` is every finding; `none` applies nothing; a list of ids is exactly those ids; `+F7` adds to and `-F2` removes from the recommended set. Ids are case-insensitive, separated by spaces or commas. Anything else is a question: answer it and ask again.
-
-When the config says `Selection: dialog` and the host has AskUserQuestion (Claude Code), ask with it instead: pack findings four per `multiSelect` question and up to four questions per call, headers `Must fix`, `Worth doing`, `Optional`, label `F<n> <short claim>`, description `<file>:<line> <summary>`, every must-fix option marked "(Recommended)". A lone finding becomes a yes/no question. The automatic Other row takes free text.
-
-Nothing is applied until the answer arrives.
-
-### 8. Verify, then apply the selection
-
-Resolve the answer to a set of ids with the reply grammar. Treat the set as a contract: those ids and no others.
-
-Before touching code, verify each selected finding: restate it, confirm it holds in this codebase, confirm the fix breaks nothing, find the reason the current code is the way it is.
-If verification overturns a selected finding, or you cannot verify it, list those ids with your reasoning and ask before applying anything; the user may insist.
-
-Snapshot the tree first: `SNAP=$(git stash create || git rev-parse HEAD)`.
-Order: must-fix first, then simple fixes, then complex ones.
-A fix that changes behaviour gets a failing test first; call the Skill tool with "flow:tdd".
-Run the touched test files after each fix.
-
-### 9. Re-review the fixes
-
-One scoped round. Dispatch only the reviewers whose findings were applied, over `git diff $SNAP`, with the applied ids, the contract and each reviewer's own instructions.
-Each answers, per id, `ADDRESSED` or `NOT ADDRESSED` with one line, and lists new breakage in the fix diff only.
-Fix anything `NOT ADDRESSED` or newly broken once; residuals go into the review file, not into another round.
-
-### 10. Prove the checks and close
-
-On every path, including `none`: run every command in the config's `## Checks` and quote each command with the last line of its output. Red output is reported as red, never summarised as passing.
-
-Append to the review file:
-
-```markdown
-## Applied <YYYY-MM-DD HH:MM>
-
-- F1: fixed. <one line>  (re-review: ADDRESSED)
-- F4: skipped. <reason>
-
-## Deferred
-
-- F7 ...  (not selected)
-
-## Checks
-
-- `npm test`: 12 passed
-```
-
-When the change came from a ticket and the checks are green, close the ticket as the tracker rules say, with the criteria met and the review file path.
-Finish with the per-id outcomes, the check results, and the review file path.
-Changes stay uncommitted; the user commits or asks for a commit.
-
-## Why tiers from reviewers, selection from the user
+## Why tiers from reviewers, and a separate fix
 
 Reviewers grade effect; they see the whole change through one lens each and should not be overruled wholesale.
-The user owns scope: a worth-doing finding may be out of scope for this ticket, and only they know.
-The review file is the durable record, `## Deferred` feeds the branch review after the last ticket, and the chat list is only the fast path to a decision.
+The review file is the durable record, so applying it is a separate step: `flow:fix` takes this file, a pull request's comments or a review someone pasted, and treats them the same way.

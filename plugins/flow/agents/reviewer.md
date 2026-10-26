@@ -1,6 +1,6 @@
 ---
 name: reviewer
-description: Runs one reviewer defined by a file in a repo's flow directory. Dispatched by the flow review skill with the change, the reviewer contract and that file's instructions.
+description: Runs one reviewer defined by a file in a repo's flow directory. Dispatched by the flow review skill with the change, the reviewer contract and that file's instructions, and by the flow fix skill to re-review the fixes.
 tools: Read, Grep, Glob, Bash
 color: cyan
 ---

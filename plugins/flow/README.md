@@ -11,7 +11,9 @@ Everything it owns for a repo lives in one flow directory, `.flow`, kept local o
 /flow:tickets                                tracer-bullet tickets, children of the epic
 /flow:implement <ticket>                     TDD at agreed seams, checks green, hands off to review
 /flow:review since <ref>|<fixed-point>|staged|working [reviewer ...]
-                                             every reviewer file (or the named ones) in parallel, findings listed, apply what you say
+                                             every reviewer file (or the named ones) in parallel, the review file written, then fix
+/flow:fix [<review file>|<PR number>|<pasted review>]
+                                             findings listed, apply what you say, re-review, checks; any review, any day
 ```
 
 `/flow:flow` prints this map with what each step leaves behind.
@@ -19,7 +21,7 @@ Everything it owns for a repo lives in one flow directory, `.flow`, kept local o
 ## Skills
 
 User-invoked: `setup`, `add-reviewer`, `grill`, `spec`, `tickets`, `implement`, `retro`, `upstream`, `flow`.
-Model-invoked (reachable by the steps above and by Claude on its own): `config`, `grilling`, `domain-modeling`, `tdd`, `review`, `pr`.
+Model-invoked (reachable by the steps above and by Claude on its own): `config`, `grilling`, `domain-modeling`, `tdd`, `review`, `fix`, `pr`.
 
 ## Where the flow keeps things
 
@@ -54,12 +56,13 @@ The standards map assigns the repo's own standards docs to path globs, so a mono
 ## Review output
 
 - The review file: `<flow dir>/reviews/<YYYY-MM-DD-HHMM>-<slug>.md` with a merge verdict, the tiers, declined-to-judge lists, and `## Applied`, `## Deferred` and `## Checks` sections appended after fixes.
-- The selection: the findings are listed in chat with a recommendation (apply all must-fix). Reply `yes`, `+F7`, `-F2`, a list of ids, `all`, or `none`. Set `Selection: dialog` in `config.md` for a multi-select question per tier instead.
-- After applying: one scoped re-review of the fix diff by the reviewers involved, the check commands quoted, and the ticket set to `done`.
+- The fix: `flow:review` hands its file to `flow:fix`; run `/flow:fix` yourself to act on a review in a later session, on a pull request's review comments, or on a review someone pasted. A PR or pasted review is first written to `reviews/` with the original text kept under `## Original review`.
+- The selection: the findings are listed in chat with a recommendation (apply all must-fix; for a person's review, all, each verified first). Reply `yes`, `+F7`, `-F2`, a list of ids, `all`, or `none`. Set `Selection: dialog` in `config.md` for a multi-select question per tier instead.
+- After applying: one scoped re-review of the fix diff by the reviewers involved (a person re-reviews their own comments), the check commands quoted, and the ticket set to `done`.
 
 ## OpenCode
 
-The skill text is written once, for Claude Code, and `scripts/install-opencode.sh` generates the OpenCode form into `~/.config/opencode/`: one `flow-<name>` skill per skill, one `/flow-<name>` command per user-invoked skill plus `/flow-review`, and the one `flow-reviewer` subagent.
+The skill text is written once, for Claude Code, and `scripts/install-opencode.sh` generates the OpenCode form into `~/.config/opencode/`: one `flow-<name>` skill per skill, one `/flow-<name>` command per user-invoked skill plus `/flow-review` and `/flow-fix`, and the one `flow-reviewer` subagent.
 It rewrites `flow:<name>` to `flow-<name>` and `${CLAUDE_PLUGIN_ROOT}` to this plugin's path.
 Rerun it after editing the plugin.
 The same flow directory serves both hosts.

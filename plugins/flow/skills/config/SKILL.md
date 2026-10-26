@@ -36,10 +36,10 @@ Never create the directory or `config.md` yourself; only `/flow:setup` does.
 
 - **Tracker**: `github`, `gitlab`, `local` or `other`. Read the matching rules: [tracker-github.md](./tracker-github.md), [tracker-gitlab.md](./tracker-gitlab.md), [tracker-local.md](./tracker-local.md). For `other`, the `## Tracker notes` paragraph is the rule; it must say how to publish, fetch and close.
 - **Domain docs**: `off`, `single` or `multi`. `off`: the flow writes no glossary or ADRs; terms and decisions stay in the conversation and the spec. `single`: `domain/GLOSSARY.md` and `domain/adr/` in the flow directory. `multi`: `domain/GLOSSARY-MAP.md` pointing at `domain/<context>/GLOSSARY.md` and `domain/<context>/adr/`. In every mode, read the flow directory's domain docs and the repo's own committed glossary and ADRs before exploring, use their vocabulary, and flag a contradiction with an ADR instead of silently overriding it. Missing files are not worth a mention.
-- **Selection**: `chat` or `dialog`; how `flow:review` asks which findings to apply. `dialog` needs AskUserQuestion (Claude Code); elsewhere it falls back to `chat`.
+- **Selection**: `chat` or `dialog`; how `flow:fix` asks which findings to apply. `dialog` needs AskUserQuestion (Claude Code); elsewhere it falls back to `chat`.
 - **Standards map**: per changed file, the docs of the first matching row go to every reviewer that takes `standards`. The docs are the repo's own files. A missing doc is dropped and listed in the review header.
 - **Standards notes**: the user's own rules for this repo, passed with the mapped docs and treated as documented standards.
-- **Checks**: the commands `flow:implement` and `flow:review` run and quote.
+- **Checks**: the commands `flow:implement` and `flow:fix` run and quote.
 - **Navigation**: pointers `flow:implement` reads before exploring; `flow:retro` adds to them.
 
 ## Reviewers

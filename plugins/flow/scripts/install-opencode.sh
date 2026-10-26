@@ -24,7 +24,7 @@ body_after_frontmatter() {
 }
 
 # Model-invoked skills that users also type by hand, as /flow:review since <ref>; they get a command like the user-invoked ones.
-typed_by_hand=" review "
+typed_by_hand=" review fix "
 
 mkdir -p "$target/skills" "$target/agents" "$target/commands"
 rm -rf "$target"/skills/flow-* "$target"/agents/flow-*.md "$target"/commands/flow-*.md

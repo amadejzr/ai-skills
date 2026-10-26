@@ -20,6 +20,6 @@ Both hosts read the same per-repo config, tickets and reviews under `~/.flow`; `
 
 | plugin | what |
 | --- | --- |
-| [flow](plugins/flow/README.md) | grill, spec, tickets, implement (TDD), review with configurable reviewers, pr, retro, upstream check |
+| [flow](plugins/flow/README.md) | grill, spec, tickets, implement (TDD), review with configurable reviewers, fix, pr, retro, upstream check |
 
 See [CREDITS.md](CREDITS.md) for the sources this work forks.

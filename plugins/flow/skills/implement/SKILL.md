@@ -24,6 +24,6 @@ Implement the ticket the user passes: a ticket reference, a path to a local tick
    Run typechecking regularly and single test files regularly.
 6. **Prove it.** Run every command in the config's `## Checks` and quote each with the last line of its output. Do not go on while any is red.
    Tick the acceptance criteria on the ticket as each one is proven by a passing test: update the checkboxes on a local ticket file, or comment with the criteria met on a tracker.
-7. **Review**: call the Skill tool with "flow:review" in `since` mode with the base from step 3, passing the ticket and epic references. Review takes over from here: findings, selection, fixes, re-review, checks, and closing the ticket.
+7. **Review**: call the Skill tool with "flow:review" in `since` mode with the base from step 3, passing the ticket and epic references. Review and then `flow:fix` take over from here: findings, selection, fixes, re-review, checks, and closing the ticket.
 
 Leave the work uncommitted. The user commits after review, or asks for a commit.
