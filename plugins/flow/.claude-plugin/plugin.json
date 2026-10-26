@@ -1,0 +1,17 @@
+{
+  "name": "flow",
+  "version": "0.2.2",
+  "description": "Spec-first engineering flow: grill with docs, spec, tickets, TDD implement, multi-reviewer code review configured per project.",
+  "author": {
+    "name": "Amadej Jerlah"
+  },
+  "license": "MIT",
+  "keywords": [
+    "engineering",
+    "tdd",
+    "code-review",
+    "grilling",
+    "domain-modeling",
+    "spec"
+  ]
+}

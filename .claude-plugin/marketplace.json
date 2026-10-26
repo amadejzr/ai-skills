@@ -1,0 +1,17 @@
+{
+  "name": "amadej",
+  "owner": {
+    "name": "Amadej Jerlah"
+  },
+  "metadata": {
+    "description": "Amadej's personal Claude Code skills: one spec-first, TDD, multi-reviewer engineering flow"
+  },
+  "plugins": [
+    {
+      "name": "flow",
+      "source": "./plugins/flow",
+      "description": "grill -> spec -> tickets -> implement (TDD) -> multi-reviewer review with per-project reviewers and coding standards",
+      "category": "development"
+    }
+  ]
+}
