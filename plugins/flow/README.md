@@ -1,72 +1,78 @@
 # flow
 
-A spec-first engineering loop, forked from Matt Pocock's skills, superpowers and feature-dev and regrouped into one plugin.
-Everything it owns for a repo lives in one flow directory, `.flow`, kept local or committed with the repo.
+A generator for a repo's engineering flow, forked from Matt Pocock's skills, superpowers and feature-dev.
+Install the plugin once.
+In each repo, `/flow:flow` explores the code, interviews you about how you want to work there, and writes the flow into the repo as its own skills and agents.
+From then on those files are the behaviour: edit them like code, nothing reads a config at run time.
 
 ```
-/flow:setup                                  once per repo
-/flow:add-reviewer                           define or change one reviewer, any time
-/flow:grill                                  interview; glossary and ADRs only when the repo config allows
-/flow:spec                                   the epic, builder-checked, approved, on the tracker
-/flow:tickets                                tracer-bullet tickets, children of the epic
-/flow:implement <ticket>                     TDD at agreed seams, checks green, hands off to review
-/flow:review since <ref>|<fixed-point>|staged|working [reviewer ...]
-                                             every reviewer file (or the named ones) in parallel, findings listed, apply what you say
+/flow:flow                      once per repo: interview, then generate; again to change anything, with a diff per file
 ```
 
-`/flow:flow` prints this map with what each step leaves behind.
-
-## Skills
-
-User-invoked: `setup`, `add-reviewer`, `grill`, `spec`, `tickets`, `implement`, `retro`, `upstream`, `flow`.
-Model-invoked (reachable by the steps above and by Claude on its own): `config`, `grilling`, `domain-modeling`, `tdd`, `review`, `pr`.
-
-## Where the flow keeps things
-
-Per repo, one flow directory holds everything the flow owns; nothing it owns lives anywhere else:
+What a repo gets:
 
 ```
-<flow dir>/
-  config.md              tracker, domain docs, selection, standards map and notes, checks, navigation
-  reviewers/<name>.md    one file per reviewer: the whole reviewer
-  features/<slug>/       local tracker: spec.md and issues/<NN>-<slug>.md
-  domain/                glossary and ADRs, when Domain docs is on
-  reviews/               one file per review run
+<repo>/.claude/
+  skills/
+    grill/        Matt Pocock's grill-with-docs: calls grilling, and domain-modeling when domain is on
+    grilling/     Matt Pocock's grilling, unchanged
+    domain-modeling/   Matt Pocock's domain-modeling with its format files, unchanged; only when domain is on
+    spec/         the epic, in template.md, builder-checked when you said so
+    tickets/      tracer-bullet tickets, in template.md, with blocking edges
+    implement/    Matt Pocock's implement (ticket scope) or implement-spec (epic scope) with your settings baked in
+    tdd/          Matt Pocock's tdd with tests.md and mocking.md, unchanged
+    review/       Matt Pocock's code-review with one parallel reviewer agent per row of its reviewer table
+    research/     background agents over the sources you trust, one cited note
+    pr/           the PR body, in template.md
+    retro/        turns what slipped into reviewer rules, checks, pointers or workflow edits
+  agents/
+    spec-reviewer.md  correctness-reviewer.md  ...   one per reviewer, each with its own model
+    implementer.md                                   when scope is epic
+  flow/
+    features/   research/                              specs, tickets and research notes
+    settings    generated                             what the last /flow:flow run used and wrote
 ```
 
-`setup` picks one of two modes per repo, and can switch later:
+Commands in a repo: `/grill`, `/spec`, `/tickets`, `/implement <ticket> | <epic>`, `/review <fixed-point>`, `/retro`.
+`review`, `research` and `pr` are reached by the steps and by Claude on its own; by hand, `/review since <ref> [spec-reviewer security-reviewer ...]` runs the named agents only.
 
-- **local** (recommended): the directory is `~/.flow/<repo-key>` (override with `FLOW_HOME`), keyed by the origin remote so clones and worktrees share it; the repo gets a `.flow` symlink to it, listed in `.git/info/exclude`.
-- **git**: the directory is `<repo>/.flow`, committed with the repo; `.flow/.gitignore` keeps `reviews/` out.
+## What the interview decides
 
-`scripts/flow-config.sh` resolves the directory (`--init local|git`, `--switch local|git`); `flow:config` reads it for every other skill.
-Without a flow directory nothing runs: there are no built-in defaults.
-The repo's own docs (`CONTRIBUTING.md`, `CLAUDE.md`, a committed glossary or ADRs) stay where they are; the flow reads them and never edits them.
+| setting | values | what it changes |
+| --- | --- | --- |
+| `mode` | `private`, `committed` | generated paths go into `.git/info/exclude`, or the repo commits them |
+| `scope` | `ticket`, `epic` | one implement run covers one ticket here, or every ticket of the epic from the frontier, each in a fresh implementer agent |
+| `pacing` | `checkpoint`, `autonomous` | implement stops after every red → green cycle so you read the code, or runs through |
+| `commits` | `agent`, `user` | who commits in ticket scope; epic scope always commits on its integration branch |
+| `gate` | `none`, `confirm`, `grill` | before a ticket starts: nothing, a yes from you, or a grilling of the ticket |
+| `stops` | any of `seams`, `spec`, `builder`, `tickets`; `none` | which planning steps wait for you |
+| `tracker` | `local`, `github`, `gitlab`, `other` | where epics and tickets live |
+| `domain` | `off`, `on` | whether grill also runs domain-modeling, keeping `GLOSSARY.md` and `docs/adr/` in the repo as Matt Pocock's skill does |
+| `reviewers` | `spec`, `correctness`, `security`, `standards`, `tests`, plus your own | one agent file each, rules adapted to the repo |
+| models | `opus`, `sonnet`, `haiku`, `fable` | the implementer, the builder check, research; reviewers in their own frontmatter |
 
-## Reviewers
+Prose the interview fills in: each reviewer's rules and paths, the research sources, the PR template merged with the repo's own, and the tracker lines when the tracker is `other`.
 
-Nothing is built in: each reviewer is a file you write for the repo, through `setup` or `/flow:add-reviewer`, or by hand.
-Its frontmatter holds `model`, `paths` and `inputs` (`spec`, `standards`, `domain-docs`); its body is the reviewer's whole instructions: what it looks at, its numbered rules, what it skips.
-`flow:review` runs every file in parallel, or only the ones you name, each as the one generic agent `agents/reviewer.md` with the file's body as its instructions.
-Every reviewer also gets the same contract (`skills/review/REVIEWER-CONTRACT.md`): read-only, severities must-fix / worth-doing / optional, confidence 75 or above, one fixed output shape.
-The standards map assigns the repo's own standards docs to path globs, so a monorepo can review each package against its own rules, and the standards notes hold your rules for the repo; both go to reviewers that take `standards`.
+## Install
 
-## Review output
+```
+/plugin marketplace add amadejzr/ai-skills
+/plugin install flow@amadej
+```
 
-- The review file: `<flow dir>/reviews/<YYYY-MM-DD-HHMM>-<slug>.md` with a merge verdict, the tiers, declined-to-judge lists, and `## Applied`, `## Deferred` and `## Checks` sections appended after fixes.
-- The selection: the findings are listed in chat with a recommendation (apply all must-fix). Reply `yes`, `+F7`, `-F2`, a list of ids, `all`, or `none`. Set `Selection: dialog` in `config.md` for a multi-select question per tier instead.
-- After applying: one scoped re-review of the fix diff by the reviewers involved, the check commands quoted, and the ticket set to `done`.
+Update with `/plugin marketplace update amadej` then `/plugin update flow@amadej`, or switch auto-update on for the `amadej` marketplace under `/plugin`.
+For development, `claude --plugin-dir ./plugins/flow` loads this checkout.
+Generated repos are untouched by plugin updates; run `/flow:flow` again in a repo to pull improvements in, file by file.
 
-## OpenCode
+## Inside the plugin
 
-The skill text is written once, for Claude Code, and `scripts/install-opencode.sh` generates the OpenCode form into `~/.config/opencode/`: one `flow-<name>` skill per skill, one `/flow-<name>` command per user-invoked skill plus `/flow-review`, and the one `flow-reviewer` subagent.
-It rewrites `flow:<name>` to `flow-<name>` and `${CLAUDE_PLUGIN_ROOT}` to this plugin's path.
-Rerun it after editing the plugin.
-The same flow directory serves both hosts.
-OpenCode cannot pick a model per dispatch, so a reviewer file's `model` is ignored there and reviewers run on the dispatching agent's model; `Selection: dialog` falls back to chat.
+```
+skills/flow/        the generator: explore, interview (grilling.md), generate, diff on re-run
+skills/upstream/    port changes from the forked sources
+generator/          the templates generate.sh composes: skills/<name>/, agents/; README.md is the contract
+scripts/generate.sh compose, --check for unfilled markers, --exclude / --include for git
+tests/              generate.test.sh
+upstream/           the forked files at the version last reviewed
+```
 
-## Keeping up with the sources
-
-`upstream/<source>/` holds the upstream files this plugin forked, at the version last reviewed, plus a `SOURCE` file with the commit.
-`/flow:upstream` runs `scripts/upstream-check.sh --diff` (a depth-1 clone of each source), decides per hunk whether to port or skip, applies the ports, and accepts the new baseline.
-`/flow:retro` turns what a review missed into reviewer rules, standards notes, checks or navigation pointers.
+Templates are Markdown with HTML-comment directives (`<!-- if scope=epic -->`, `{{flow_dir}}`, `<!-- fill: ... -->`); `generator/README.md` has the full list.

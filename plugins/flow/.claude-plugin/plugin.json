@@ -1,7 +1,6 @@
 {
   "name": "flow",
-  "version": "0.2.2",
-  "description": "Spec-first engineering flow: grill with docs, spec, tickets, TDD implement, multi-reviewer code review configured per project.",
+  "description": "A generator for a repo's engineering flow: one interview, then the repo gets its own grill, spec, tickets, TDD implement, multi-reviewer review, research, pr and retro skills under .claude/, shaped by the answers and edited like code.",
   "author": {
     "name": "Amadej Jerlah"
   },
@@ -11,7 +10,10 @@
     "tdd",
     "code-review",
     "grilling",
+    "research",
     "domain-modeling",
-    "spec"
+    "spec",
+    "workflow",
+    "generator"
   ]
 }

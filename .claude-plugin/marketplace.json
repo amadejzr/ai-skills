@@ -4,13 +4,13 @@
     "name": "Amadej Jerlah"
   },
   "metadata": {
-    "description": "Amadej's personal Claude Code skills: one spec-first, TDD, multi-reviewer engineering flow"
+    "description": "Amadej's personal Claude Code skills: a generator for a spec-first, TDD, multi-reviewer engineering flow per repo"
   },
   "plugins": [
     {
       "name": "flow",
       "source": "./plugins/flow",
-      "description": "grill -> spec -> tickets -> implement (TDD) -> multi-reviewer review with per-project reviewers and coding standards",
+      "description": "/flow: interview once per repo, then the repo owns its grill -> spec -> tickets -> implement (TDD) -> multi-reviewer review skills, generated from the answers",
       "category": "development"
     }
   ]

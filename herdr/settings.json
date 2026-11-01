@@ -1,0 +1,10 @@
+{
+  "zoom": 1.0,
+  "sounds": {
+    "enabled": true
+  },
+  "font": "Hack Nerd Font Mono",
+  "font_size": 14.0,
+  "minimum_contrast": 1.0,
+  "theme": "ghostty"
+}
