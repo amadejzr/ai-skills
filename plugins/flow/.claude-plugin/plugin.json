@@ -1,19 +1,23 @@
 {
   "name": "flow",
-  "description": "A generator for a repo's engineering flow: one interview, then the repo gets its own grill, spec, tickets, TDD implement, multi-reviewer review, research, pr and retro skills under .claude/, shaped by the answers and edited like code.",
+  "version": "0.3.0",
+  "description": "One skill, /flow:setup: explores a repo, proposes improvements, grills you over a workflow design tree, then writes the repo's own spec-first, test-first loop under .claude/ (grill, spec, tickets, implement, implement-spec, review with per-repo reviewers, fix, pr, research, retro) from reference recipes. No template engine, no runtime config; every file is the repo's to edit.",
   "author": {
     "name": "Amadej Jerlah"
   },
   "license": "MIT",
   "keywords": [
     "engineering",
+    "workflow",
+    "setup",
+    "spec",
+    "tickets",
     "tdd",
     "code-review",
+    "reviewers",
     "grilling",
-    "research",
     "domain-modeling",
-    "spec",
-    "workflow",
-    "generator"
+    "worktrees",
+    "research"
   ]
 }

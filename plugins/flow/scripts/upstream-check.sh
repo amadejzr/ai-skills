@@ -1,13 +1,28 @@
 #!/usr/bin/env bash
-# Compare the forked upstream files against their sources on GitHub.
-#   upstream-check.sh            status per tracked file
-#   upstream-check.sh --diff     status plus unified diffs
-#   upstream-check.sh --accept   copy the current upstream files into the baseline and record the commit
 set -euo pipefail
 
+usage() {
+  echo "usage: upstream-check.sh [--diff | --accept]" >&2
+  echo "  no flag   status of every baseline file and every verbatim copy" >&2
+  echo "  --diff    the same, with a unified diff per changed file" >&2
+  echo "  --accept  copy upstream into the baseline and into references/verbatim/, record the commit" >&2
+  exit 2
+}
+
 mode="${1:-status}"
+case "$mode" in
+  status | --diff | --accept) ;;
+  *) usage ;;
+esac
+
 plugin_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 baseline_root="$plugin_root/upstream"
+verbatim_root="$plugin_root/references/verbatim"
+verbatim_forks=(
+  "grilling:mattpocock-skills/skills/productivity/grilling"
+  "tdd:mattpocock-skills/skills/engineering/tdd"
+  "domain-modeling:mattpocock-skills/skills/engineering/domain-modeling"
+)
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
 
@@ -46,6 +61,36 @@ for source_dir in "$baseline_root"/*/; do
   fi
 done
 
+echo "== verbatim copies in references/verbatim/"
+for fork in "${verbatim_forks[@]}"; do
+  skill="${fork%%:*}"
+  baseline_dir="$baseline_root/${fork#*:}"
+  while IFS= read -r baseline_file; do
+    file_name="$(basename "$baseline_file")"
+    verbatim_file="$verbatim_root/$skill/$file_name"
+    if [[ "$mode" == "--accept" ]]; then
+      mkdir -p "$verbatim_root/$skill"
+      cp "$baseline_file" "$verbatim_file"
+      echo "  copied: $skill/$file_name"
+    elif [[ ! -f "$verbatim_file" ]]; then
+      echo "  missing verbatim: $skill/$file_name"
+      changed=1
+    elif cmp -s "$baseline_file" "$verbatim_file"; then
+      echo "  identical: $skill/$file_name"
+    else
+      echo "  DIFFERS FROM BASELINE: $skill/$file_name"
+      changed=1
+      if [[ "$mode" == "--diff" ]]; then
+        diff -u "$baseline_file" "$verbatim_file" | sed 's/^/    /' || true
+      fi
+    fi
+  done < <(find "$baseline_dir" -maxdepth 1 -type f | sort)
+done
+
 if [[ "$mode" != "--accept" ]]; then
-  [[ $changed -eq 0 ]] && echo "no upstream changes" || echo "upstream changes found; run /flow:upstream to port them"
+  if [[ $changed -eq 0 ]]; then
+    echo "no upstream changes"
+  else
+    echo "upstream changes found; run /upstream in this checkout to port them"
+  fi
 fi

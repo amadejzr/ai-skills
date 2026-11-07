@@ -1,8 +1,8 @@
 # amadej skills
 
 Personal Claude Code plugin marketplace.
-One plugin, `flow`: a generator for a spec-first, test-first engineering loop with a multi-reviewer code review.
-Install it once; in each repo `/flow:flow` interviews you and writes the loop into the repo as its own skills, shaped by your answers and edited like code.
+One plugin, `flow`: one skill that sets up a spec-first, test-first engineering loop with a multi-reviewer code review in each repo.
+Install it once; in each repo `/flow:setup` explores the code, settles the workflow with you, and writes the loop into the repo as its own skills and agents, edited like code.
 
 ## Install
 
@@ -18,7 +18,7 @@ For development, run Claude Code with `claude --plugin-dir ./plugins/flow` to lo
 
 | plugin | what |
 | --- | --- |
-| [flow](plugins/flow/README.md) | `/flow:flow` generates grill, spec, tickets, implement (TDD, per ticket or per epic), review with per-repo reviewers, research, pr and retro into a repo |
+| [flow](plugins/flow/README.md) | `/flow:setup` writes grill, spec, tickets, implement, implement-spec, review with per-repo reviewers, fix, pr, research and retro into a repo |
 
 ## Herdr
 
